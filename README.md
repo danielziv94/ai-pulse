@@ -27,7 +27,7 @@ Built by [@danielziv94](https://github.com/danielziv94) · Personal use only · 
 
 ## Features
 
-- **8 AI sources** — Anthropic, OpenAI, Google, Meta AI, Mistral, xAI, Hugging Face, Cohere  
+- **6 AI tool sources** — Claude, ChatGPT, Gemini, GitHub Copilot, Cursor, Claude Code  
 - **Gemini 2.5 Flash summaries** — 4-5 sentence paragraph per article, cached locally so each article only calls the API once  
 - **Shimmer loading** — smooth animated placeholder while summaries are generating  
 - **Swipeable card feed** — peek-style PageView with animated dot indicators  
@@ -114,7 +114,7 @@ lib/
 ├── theme/
 │   └── app_theme.dart               # Dark/light ThemeData + source color map
 ├── services/
-│   ├── rss_service.dart             # Multi-URL RSS/Atom fetcher with Google News fallbacks
+│   ├── rss_service.dart             # Multi-URL RSS/Atom fetcher with per-source fallback chains
 │   ├── gemini_service.dart          # Gemini 2.5 Flash summarization (8s timeout)
 │   ├── cache_service.dart           # SharedPreferences: summaries, saved IDs, known IDs
 │   ├── notification_service.dart    # flutter_local_notifications + WorkManager scheduling
@@ -138,18 +138,18 @@ lib/
 
 ## RSS Sources
 
-All sources try their primary feed URL first, then fallbacks in order. Sources without a public RSS feed fall back to Google News RSS (reliable, standard RSS 2.0).
+All sources try URLs in order and use the first that returns a valid feed. GitHub repos expose a free Atom feed at `github.com/:owner/:repo/releases.atom` — no auth required.
 
-| Source | Primary URL | Fallback |
-|--------|------------|---------|
-| Anthropic | anthropic.com/news/rss | Google News |
-| OpenAI | openai.com/news/rss | openai.com/blog/rss.xml → Google News |
-| Google | blog.google/technology/ai/rss/ | ai.googleblog.com → Google News |
-| Meta AI | ai.meta.com/blog/rss/ | engineering.fb.com/category/ai-research/feed/ → Google News |
-| Mistral | mistral.ai/news/rss | mistral.ai/news/feed.xml → Google News |
-| xAI | x.ai/news/rss | x.ai/blog/rss → Google News |
-| Hugging Face | huggingface.co/blog/feed.xml | Google News |
-| Cohere | cohere.com/blog/rss | cohere.com/blog/feed → Google News |
+| Source | Primary Feed | Fallback |
+|--------|-------------|---------|
+| Claude | anthropic.com/news/rss | anthropic.com/rss.xml |
+| ChatGPT | openai.com/news/rss | openai.com/blog/rss.xml |
+| Gemini | github.com/google-gemini/gemini-cli/releases.atom | blog.google/technology/ai/rss |
+| GitHub Copilot | github.blog/changelog/feed/ | github.blog/feed/ |
+| Cursor | cursor.com/changelog/rss.xml | cursor.com/rss.xml → cursor-changelog.com/feed |
+| Claude Code | anthropic.com/engineering/rss + anthropic.com/research/rss + 3 GitHub SDK release Atom feeds | — |
+
+**Claude Code deduplication:** Articles from the Claude Code feed that share a URL with a Claude article are automatically suppressed, so you never see the same post twice.
 
 The **Profile → Sources** screen shows the exact URL that succeeded on the last refresh, and highlights any source that is unavailable.
 

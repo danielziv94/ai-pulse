@@ -5,52 +5,36 @@ import '../models/article.dart';
 import 'logger_service.dart';
 
 const Map<String, List<String>> kRssFeeds = {
-  // Anthropic has no public RSS — Google News is the reliable source
-  'Anthropic': [
+  'Claude': [
     'https://www.anthropic.com/news/rss',
-    'https://www.anthropic.com/blog/rss',
-    'https://news.google.com/rss/search?q=Anthropic+AI&hl=en-US&gl=US&ceid=US:en',
+    'https://www.anthropic.com/rss.xml',
   ],
-  // OpenAI has no public RSS — Google News fallback
-  'OpenAI': [
+  'ChatGPT': [
     'https://openai.com/news/rss',
     'https://openai.com/blog/rss.xml',
-    'https://news.google.com/rss/search?q=OpenAI+GPT&hl=en-US&gl=US&ceid=US:en',
   ],
-  'Google': [
-    'https://blog.google/technology/ai/rss/',
+  // GitHub releases Atom feed for the Gemini CLI (official Google repo)
+  'Gemini': [
+    'https://github.com/google-gemini/gemini-cli/releases.atom',
     'https://blog.google/technology/ai/rss',
-    'https://ai.googleblog.com/feeds/posts/default',
-    'https://news.google.com/rss/search?q=Google+DeepMind+AI&hl=en-US&gl=US&ceid=US:en',
   ],
-  'Meta AI': [
-    'https://ai.meta.com/blog/rss/',
-    'https://ai.meta.com/blog/rss',
-    'https://engineering.fb.com/category/ai-research/feed/',
-    'https://news.google.com/rss/search?q=Meta+AI+Llama&hl=en-US&gl=US&ceid=US:en',
+  // GitHub Changelog is a standard WordPress RSS feed
+  'GitHub Copilot': [
+    'https://github.blog/changelog/feed/',
+    'https://github.blog/feed/',
   ],
-  // Mistral has no public RSS — Google News fallback
-  'Mistral': [
-    'https://mistral.ai/news/rss',
-    'https://mistral.ai/news/feed.xml',
-    'https://news.google.com/rss/search?q=Mistral+AI+model&hl=en-US&gl=US&ceid=US:en',
+  'Cursor': [
+    'https://cursor.com/changelog/rss.xml',
+    'https://cursor.com/rss.xml',
+    'https://cursor-changelog.com/feed',
   ],
-  // xAI has no public RSS — Google News fallback
-  'xAI': [
-    'https://x.ai/news/rss',
-    'https://x.ai/blog/rss',
-    'https://news.google.com/rss/search?q=xAI+Grok+Elon&hl=en-US&gl=US&ceid=US:en',
-  ],
-  'Hugging Face': [
-    'https://huggingface.co/blog/feed.xml',
-    'https://huggingface.co/blog/rss.xml',
-    'https://news.google.com/rss/search?q=Hugging+Face+AI&hl=en-US&gl=US&ceid=US:en',
-  ],
-  'Cohere': [
-    'https://cohere.com/blog/rss',
-    'https://cohere.com/blog/feed',
-    'https://cohere.com/feed.xml',
-    'https://news.google.com/rss/search?q=Cohere+AI+LLM&hl=en-US&gl=US&ceid=US:en',
+  // Anthropic engineering/research blogs + official SDK & Claude Code release Atom feeds
+  'Claude Code': [
+    'https://www.anthropic.com/engineering/rss',
+    'https://www.anthropic.com/research/rss',
+    'https://github.com/anthropics/anthropic-sdk-python/releases.atom',
+    'https://github.com/anthropics/anthropic-sdk-typescript/releases.atom',
+    'https://github.com/anthropics/claude-code/releases.atom',
   ],
 };
 
@@ -96,22 +80,45 @@ class RssService {
           LoggerService.instance
               .log('RSS: all ${urls.length} URLs failed for $source');
           resolvedUrls[source] = 'unavailable';
-          return <Article>[];
+          return MapEntry(source, <Article>[]);
         }
         resolvedUrls[source] = result.url;
         final articles = _parseFeed(result.response.body, source);
         LoggerService.instance
             .log('RSS: $source → ${articles.length} articles from ${result.url}');
-        return articles;
+        return MapEntry(source, articles);
       } catch (e) {
         LoggerService.instance.log('RSS: processing error for $source — $e');
         resolvedUrls[source] = 'unavailable';
-        return <Article>[];
+        return MapEntry(source, <Article>[]);
       }
     });
 
-    final results = await Future.wait(futures);
-    final all = results.expand((list) => list).toList();
+    final entries = await Future.wait(futures);
+    final bySource = Map.fromEntries(entries);
+
+    // Build URL set from all non-Claude-Code sources for deduplication
+    final seenUrls = <String>{
+      for (final e in bySource.entries)
+        if (e.key != 'Claude Code')
+          ...e.value.map((a) => a.url),
+    };
+
+    // Flatten, deduplicating Claude Code articles against other sources
+    final all = <Article>[];
+    for (final e in bySource.entries) {
+      if (e.key == 'Claude Code') {
+        final unique =
+            e.value.where((a) => !seenUrls.contains(a.url)).toList();
+        LoggerService.instance.log(
+            'RSS: Claude Code → ${unique.length} unique articles'
+            ' (${e.value.length - unique.length} deduped)');
+        all.addAll(unique);
+      } else {
+        all.addAll(e.value);
+      }
+    }
+
     all.sort((a, b) => b.pubDate.compareTo(a.pubDate));
 
     // Summary diagnostics
@@ -170,11 +177,30 @@ class RssService {
     }
   }
 
+  /// Extracts the article URL from an Atom <entry>.
+  /// Prefers <link rel="alternate" href="..."/> which GitHub Atom feeds use.
+  String? _atomLink(XmlElement entry) {
+    final links = entry.findElements('link').toList();
+    if (links.isEmpty) return _text(entry, 'link');
+    for (final l in links) {
+      if (l.getAttribute('rel') == 'alternate') {
+        final href = l.getAttribute('href');
+        if (href != null && href.isNotEmpty) return href;
+        final text = l.innerText.trim();
+        return text.isNotEmpty ? text : null;
+      }
+    }
+    final first = links.first;
+    final href = first.getAttribute('href');
+    if (href != null && href.isNotEmpty) return href;
+    final text = first.innerText.trim();
+    return text.isNotEmpty ? text : null;
+  }
+
   Article? _parseAtomEntry(XmlElement entry, String source) {
     try {
       final title = _text(entry, 'title');
-      final linkEl = entry.findElements('link').firstOrNull;
-      final link = linkEl?.getAttribute('href') ?? _text(entry, 'link');
+      final link = _atomLink(entry);
       final summary = _stripHtml(
         _text(entry, 'summary') ?? _text(entry, 'content') ?? '',
       );

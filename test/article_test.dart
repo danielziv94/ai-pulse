@@ -88,11 +88,12 @@ void main() {
       expect(a.isSaved, isFalse);
     });
 
-    test('kSourceColors has all sources', () {
+    test('kSourceColors has all 6 sources', () {
       const expectedSources = [
-        'OpenAI', 'Google', 'Anthropic', 'Meta AI',
-        'Mistral', 'xAI', 'Hugging Face', 'Cohere',
+        'Claude', 'ChatGPT', 'Gemini',
+        'GitHub Copilot', 'Cursor', 'Claude Code',
       ];
+      expect(kSourceColors.length, equals(6));
       for (final source in expectedSources) {
         expect(kSourceColors.containsKey(source), isTrue,
             reason: '$source missing from kSourceColors');

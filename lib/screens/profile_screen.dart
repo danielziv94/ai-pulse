@@ -180,15 +180,15 @@ class ProfileScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: isDark ? kBorderDark : Colors.grey.shade200),
           ),
-          child: Column(
+          child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Personal app by Daniel. Not for distribution.',
                 style: TextStyle(fontSize: 13, color: kMutedGrey),
               ),
-              const SizedBox(height: 4),
-              const Text(
+              SizedBox(height: 4),
+              Text(
                 'github.com/danielziv94',
                 style: TextStyle(fontSize: 12, color: kIndigo),
               ),
