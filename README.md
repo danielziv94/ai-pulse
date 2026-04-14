@@ -18,9 +18,9 @@ Built by [@danielziv94](https://github.com/danielziv94) · Personal use only · 
 ## Screenshots
 
 <div align="center">
-<img src="screenshots/feed.jpg" width="270" alt="Feed screen"/>
-<img src="screenshots/profile.jpg" width="270" alt="Profile screen"/>
-<img src="screenshots/settings.jpg" width="270" alt="Settings screen"/>
+<img src="screenshots/feed.jpeg" width="270" alt="Feed screen"/>
+<img src="screenshots/profile.jpeg" width="270" alt="Profile screen"/>
+<img src="screenshots/settings.jpeg" width="270" alt="Settings screen"/>
 </div>
 
 ---
