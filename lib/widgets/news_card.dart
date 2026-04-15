@@ -64,7 +64,7 @@ class _ShimmerLineState extends State<_ShimmerLine>
 // ── Shimmer summary block ─────────────────────────────────────────────────────
 
 class _ShimmerSummary extends StatelessWidget {
-  const _ShimmerSummary({super.key});
+  const _ShimmerSummary();
 
   @override
   Widget build(BuildContext context) {
@@ -160,48 +160,53 @@ class _NewsCardState extends State<NewsCard> {
     final hasSummary = widget.article.aiSummary != null;
     final hasDescription = widget.article.description.isNotEmpty;
 
+    const summaryStyle = TextStyle(
+      fontSize: 11,
+      color: kMutedGrey,
+      height: 1.6,
+    );
+
+    // Each branch is an Align with a unique key so AnimatedSwitcher
+    // detects the change and fades between states correctly.
     Widget summaryWidget;
     if (!geminiEnabled) {
-      // Gemini off: show RSS description directly (no shimmer, badge shown)
-      summaryWidget = Text(
-        widget.article.description.isNotEmpty
-            ? widget.article.description
-            : widget.article.title,
+      summaryWidget = Align(
         key: const ValueKey('rss_desc'),
-        maxLines: 5,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          fontSize: 11,
-          color: kMutedGrey,
-          height: 1.6,
+        alignment: Alignment.topLeft,
+        child: Text(
+          widget.article.description.isNotEmpty
+              ? widget.article.description
+              : widget.article.title,
+          overflow: TextOverflow.fade,
+          style: summaryStyle,
         ),
       );
     } else if (hasSummary) {
-      summaryWidget = Text(
-        widget.article.aiSummary!,
+      summaryWidget = Align(
         key: const ValueKey('ai_summary'),
-        maxLines: 5,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          fontSize: 11,
-          color: kMutedGrey,
-          height: 1.6,
+        alignment: Alignment.topLeft,
+        child: Text(
+          widget.article.aiSummary!,
+          overflow: TextOverflow.fade,
+          style: summaryStyle,
         ),
       );
     } else if (_shimmerTimedOut || hasDescription) {
-      summaryWidget = Text(
-        widget.article.description,
+      summaryWidget = Align(
         key: const ValueKey('fallback_desc'),
-        maxLines: 5,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          fontSize: 11,
-          color: kMutedGrey,
-          height: 1.6,
+        alignment: Alignment.topLeft,
+        child: Text(
+          widget.article.description,
+          overflow: TextOverflow.fade,
+          style: summaryStyle,
         ),
       );
     } else {
-      summaryWidget = const _ShimmerSummary(key: ValueKey('shimmer'));
+      summaryWidget = const Align(
+        key: ValueKey('shimmer'),
+        alignment: Alignment.topLeft,
+        child: _ShimmerSummary(),
+      );
     }
 
     return GestureDetector(
@@ -316,13 +321,16 @@ class _NewsCardState extends State<NewsCard> {
 
               const SizedBox(height: 10),
 
-              // Summary area
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: summaryWidget,
+              // Summary area — Expanded fills all remaining vertical space in the card
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: summaryWidget,
+                  ),
+                ),
               ),
-
-              const SizedBox(height: 12),
 
               Divider(
                 color: isDark ? kBorderDark : Colors.grey.shade200,

@@ -128,7 +128,7 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 4),
           const Center(
             child: Text(
-              'AI Pulse v1.0.1',
+              'AI Pulse v1.0.2',
               style: TextStyle(fontSize: 11, color: kMutedGrey),
             ),
           ),
