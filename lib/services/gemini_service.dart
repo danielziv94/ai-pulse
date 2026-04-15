@@ -51,7 +51,7 @@ class GeminiService {
               },
             }),
           )
-          .timeout(const Duration(seconds: 8));
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -76,7 +76,7 @@ class GeminiService {
             'GeminiService: error ${response.statusCode} — ${response.body}');
       }
     } on TimeoutException {
-      LoggerService.instance.log('Gemini: request timed out after 8s');
+      LoggerService.instance.log('Gemini: request timed out after 15s');
       debugPrint('GeminiService: timeout');
     } catch (e) {
       LoggerService.instance.log('Gemini: exception — $e');

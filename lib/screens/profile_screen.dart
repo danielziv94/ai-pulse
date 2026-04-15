@@ -43,7 +43,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const Text(
-                  'Version 1.0.3',
+                  'Version 1.0.4',
                   style: TextStyle(fontSize: 12, color: kMutedGrey),
                 ),
               ],

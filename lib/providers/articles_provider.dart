@@ -198,10 +198,16 @@ class ArticlesProvider extends ChangeNotifier {
 
       await _geminiSemaphore.acquire();
       try {
-        final content = article.description.isNotEmpty
-            ? article.description
-            : article.title;
-        final summary = await _geminiService.summarize(content);
+        // Give Gemini title + source + description so it has full context
+        // even when the RSS description is a short commit log or one-liner.
+        final buffer = StringBuffer();
+        buffer.writeln('Source: ${article.source}');
+        buffer.writeln('Title: ${article.title}');
+        if (article.description.isNotEmpty) {
+          buffer.writeln();
+          buffer.write(article.description);
+        }
+        final summary = await _geminiService.summarize(buffer.toString());
         if (summary != null && summary.isNotEmpty) {
           article.aiSummary = summary;
           await _cacheService.saveSummary(article.id, summary);
