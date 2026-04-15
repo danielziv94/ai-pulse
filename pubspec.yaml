@@ -1,6 +1,6 @@
 name: ai_pulse
 description: AI news reader with Gemini-powered summaries.
-version: 1.0.2+3
+version: 1.0.3+4
 publish_to: 'none'
 
 environment:

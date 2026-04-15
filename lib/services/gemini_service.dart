@@ -17,7 +17,7 @@ class GeminiService {
     if (content.trim().isEmpty) return null;
 
     final trimmed =
-        content.length > 2000 ? content.substring(0, 2000) : content;
+        content.length > 3000 ? content.substring(0, 3000) : content;
 
     try {
       final response = await http
@@ -30,18 +30,23 @@ class GeminiService {
                   'parts': [
                     {
                       'text':
-                          'Write a 4-5 sentence paragraph summarising this AI news article. '
-                          'Cover: what was announced or discovered, why it matters, '
-                          'and any key numbers, names, or technical details worth knowing. '
-                          'Write in plain English, no bullet points, no markdown. '
-                          'Do not start with "This article", "The article", or "According to".\n\n'
+                          'Write a detailed two-paragraph summary of this AI news article or release note.\n\n'
+                          'Paragraph 1 (4-5 sentences): Describe exactly what was announced, released, or changed. '
+                          'Include specific names — model names, version numbers, feature names, company names, '
+                          'researcher names — and any concrete numbers (parameters, benchmarks, percentages, dates).\n\n'
+                          'Paragraph 2 (4-5 sentences): Explain why this matters. Who benefits and how? '
+                          'What problem does it solve? How does it compare to previous work or competitors? '
+                          'What are the broader implications for AI development or for developers and users?\n\n'
+                          'Rules: Plain English only. No bullet points. No markdown. No headers. '
+                          'Do not start with "This article", "The article", or "According to". '
+                          'Write both paragraphs as flowing prose.\n\n'
                           '$trimmed',
                     }
                   ]
                 }
               ],
               'generationConfig': {
-                'maxOutputTokens': 280,
+                'maxOutputTokens': 600,
                 'temperature': 0.4,
               },
             }),
