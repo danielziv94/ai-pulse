@@ -60,20 +60,18 @@ class Article {
 }
 
 const Map<String, Color> kSourceColors = {
-  'Claude': Color(0xFFcc785c),
-  'ChatGPT': Color(0xFF10a37f),
-  'Gemini': Color(0xFF4285f4),
-  'GitHub Copilot': Color(0xFF6e40c9),
+  'Anthropic': Color(0xFFcc785c),
+  'OpenAI': Color(0xFF10a37f),
+  'Google': Color(0xFF4285f4),
+  'GitHub': Color(0xFF6e40c9),
   'Cursor': Color(0xFFe0e0e0),
-  'Claude Code': Color(0xFF7c3aed),
 };
 
 const List<String> kSources = [
   'All',
-  'Claude',
-  'ChatGPT',
-  'Gemini',
-  'GitHub Copilot',
+  'Anthropic',
+  'OpenAI',
+  'Google',
+  'GitHub',
   'Cursor',
-  'Claude Code',
 ];

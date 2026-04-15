@@ -88,12 +88,11 @@ void main() {
       expect(a.isSaved, isFalse);
     });
 
-    test('kSourceColors has all 6 sources', () {
+    test('kSourceColors has all 5 sources', () {
       const expectedSources = [
-        'Claude', 'ChatGPT', 'Gemini',
-        'GitHub Copilot', 'Cursor', 'Claude Code',
+        'Anthropic', 'OpenAI', 'Google', 'GitHub', 'Cursor',
       ];
-      expect(kSourceColors.length, equals(6));
+      expect(kSourceColors.length, equals(5));
       for (final source in expectedSources) {
         expect(kSourceColors.containsKey(source), isTrue,
             reason: '$source missing from kSourceColors');

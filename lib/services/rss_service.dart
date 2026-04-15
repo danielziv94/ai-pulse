@@ -5,36 +5,33 @@ import '../models/article.dart';
 import 'logger_service.dart';
 
 const Map<String, List<String>> kRssFeeds = {
-  'Claude': [
+  'Anthropic': [
     'https://www.anthropic.com/news/rss',
+    'https://raw.githubusercontent.com/taobojlen/anthropic-rss-feed/main/anthropic_news_rss.xml',
     'https://www.anthropic.com/rss.xml',
   ],
-  'ChatGPT': [
+  'OpenAI': [
+    'https://openai.com/news/rss.xml',
     'https://openai.com/news/rss',
     'https://openai.com/blog/rss.xml',
   ],
-  // GitHub releases Atom feed for the Gemini CLI (official Google repo)
-  'Gemini': [
-    'https://github.com/google-gemini/gemini-cli/releases.atom',
+  'Google': [
     'https://blog.google/technology/ai/rss',
+    'https://deepmind.google/discover/blog/rss',
+    'https://blog.google/rss',
+    'https://research.google/blog/rss',
   ],
-  // GitHub Changelog is a standard WordPress RSS feed
-  'GitHub Copilot': [
+  // GitHub Copilot AI/ML blog + changelog + general blog as fallback
+  'GitHub': [
+    'https://github.blog/ai-and-ml/github-copilot/feed/',
     'https://github.blog/changelog/feed/',
     'https://github.blog/feed/',
   ],
   'Cursor': [
-    'https://cursor.com/changelog/rss.xml',
+    'https://cursor.com/blog/rss.xml',
     'https://cursor.com/rss.xml',
+    'https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_cursor.xml',
     'https://cursor-changelog.com/feed',
-  ],
-  // Anthropic engineering/research blogs + official SDK & Claude Code release Atom feeds
-  'Claude Code': [
-    'https://www.anthropic.com/engineering/rss',
-    'https://www.anthropic.com/research/rss',
-    'https://github.com/anthropics/anthropic-sdk-python/releases.atom',
-    'https://github.com/anthropics/anthropic-sdk-typescript/releases.atom',
-    'https://github.com/anthropics/claude-code/releases.atom',
   ],
 };
 
@@ -80,45 +77,22 @@ class RssService {
           LoggerService.instance
               .log('RSS: all ${urls.length} URLs failed for $source');
           resolvedUrls[source] = 'unavailable';
-          return MapEntry(source, <Article>[]);
+          return <Article>[];
         }
         resolvedUrls[source] = result.url;
         final articles = _parseFeed(result.response.body, source);
         LoggerService.instance
             .log('RSS: $source → ${articles.length} articles from ${result.url}');
-        return MapEntry(source, articles);
+        return articles;
       } catch (e) {
         LoggerService.instance.log('RSS: processing error for $source — $e');
         resolvedUrls[source] = 'unavailable';
-        return MapEntry(source, <Article>[]);
+        return <Article>[];
       }
     });
 
-    final entries = await Future.wait(futures);
-    final bySource = Map.fromEntries(entries);
-
-    // Build URL set from all non-Claude-Code sources for deduplication
-    final seenUrls = <String>{
-      for (final e in bySource.entries)
-        if (e.key != 'Claude Code')
-          ...e.value.map((a) => a.url),
-    };
-
-    // Flatten, deduplicating Claude Code articles against other sources
-    final all = <Article>[];
-    for (final e in bySource.entries) {
-      if (e.key == 'Claude Code') {
-        final unique =
-            e.value.where((a) => !seenUrls.contains(a.url)).toList();
-        LoggerService.instance.log(
-            'RSS: Claude Code → ${unique.length} unique articles'
-            ' (${e.value.length - unique.length} deduped)');
-        all.addAll(unique);
-      } else {
-        all.addAll(e.value);
-      }
-    }
-
+    final results = await Future.wait(futures);
+    final all = results.expand((list) => list).toList();
     all.sort((a, b) => b.pubDate.compareTo(a.pubDate));
 
     // Summary diagnostics

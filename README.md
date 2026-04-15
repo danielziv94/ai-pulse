@@ -27,7 +27,7 @@ Built by [@danielziv94](https://github.com/danielziv94) · Personal use only · 
 
 ## Features
 
-- **6 AI tool sources** — Claude, ChatGPT, Gemini, GitHub Copilot, Cursor, Claude Code  
+- **5 AI company sources** — Anthropic, OpenAI, Google, GitHub, Cursor  
 - **Gemini 2.5 Flash summaries** — 4-5 sentence paragraph per article, cached locally so each article only calls the API once  
 - **Shimmer loading** — smooth animated placeholder while summaries are generating  
 - **Swipeable card feed** — peek-style PageView with animated dot indicators  
@@ -140,16 +140,13 @@ lib/
 
 All sources try URLs in order and use the first that returns a valid feed. GitHub repos expose a free Atom feed at `github.com/:owner/:repo/releases.atom` — no auth required.
 
-| Source | Primary Feed | Fallback |
-|--------|-------------|---------|
-| Claude | anthropic.com/news/rss | anthropic.com/rss.xml |
-| ChatGPT | openai.com/news/rss | openai.com/blog/rss.xml |
-| Gemini | github.com/google-gemini/gemini-cli/releases.atom | blog.google/technology/ai/rss |
-| GitHub Copilot | github.blog/changelog/feed/ | github.blog/feed/ |
-| Cursor | cursor.com/changelog/rss.xml | cursor.com/rss.xml → cursor-changelog.com/feed |
-| Claude Code | anthropic.com/engineering/rss + anthropic.com/research/rss + 3 GitHub SDK release Atom feeds | — |
-
-**Claude Code deduplication:** Articles from the Claude Code feed that share a URL with a Claude article are automatically suppressed, so you never see the same post twice.
+| Source | Primary Feed | Fallbacks |
+|--------|-------------|----------|
+| Anthropic | anthropic.com/news/rss | raw GitHub mirror → anthropic.com/rss.xml |
+| OpenAI | openai.com/news/rss.xml | openai.com/news/rss → openai.com/blog/rss.xml |
+| Google | blog.google/technology/ai/rss | deepmind.google/discover/blog/rss → blog.google/rss → research.google/blog/rss |
+| GitHub | github.blog/ai-and-ml/github-copilot/feed/ | github.blog/changelog/feed/ → github.blog/feed/ |
+| Cursor | cursor.com/blog/rss.xml | cursor.com/rss.xml → raw GitHub mirror → cursor-changelog.com/feed |
 
 The **Profile → Sources** screen shows the exact URL that succeeded on the last refresh, and highlights any source that is unavailable.
 
